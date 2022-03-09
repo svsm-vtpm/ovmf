@@ -74,6 +74,8 @@
   gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfSecGhcbBackupBase
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfSecGhcbBackupSize
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfSecSvsmCaaBase
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfSecSvsmCaaSize
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfSnpSecretsBase
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfSnpSecretsSize
 

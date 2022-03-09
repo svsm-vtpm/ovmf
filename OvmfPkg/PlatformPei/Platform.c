@@ -341,6 +341,7 @@ InitializePlatform (
 
   PlatformInfoHob->SmmSmramRequire     = FeaturePcdGet (PcdSmmSmramRequire);
   PlatformInfoHob->SevEsIsEnabled      = MemEncryptSevEsIsEnabled ();
+  PlatformInfoHob->SevSnpIsEnabled     = MemEncryptSevSnpIsEnabled ();
   PlatformInfoHob->PcdPciMmio64Size    = PcdGet64 (PcdPciMmio64Size);
   PlatformInfoHob->DefaultMaxCpuNumber = PcdGet32 (PcdCpuMaxLogicalProcessorNumber);
 
