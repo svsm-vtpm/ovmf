@@ -13,73 +13,6 @@
 #include <Ppi/VectorHandoffInfo.h>
 #include <Protocol/Cpu.h>
 
-#define CPU_EXCEPTION_INIT_DATA_REV  1
-
-typedef union {
-  struct {
-    //
-    // Revision number of this structure.
-    //
-    UINT32     Revision;
-    //
-    // The address of top of known good stack reserved for *ALL* exceptions
-    // listed in field StackSwitchExceptions.
-    //
-    UINTN      KnownGoodStackTop;
-    //
-    // The size of known good stack for *ONE* exception only.
-    //
-    UINTN      KnownGoodStackSize;
-    //
-    // Buffer of exception vector list for stack switch.
-    //
-    UINT8      *StackSwitchExceptions;
-    //
-    // Number of exception vectors in StackSwitchExceptions.
-    //
-    UINTN      StackSwitchExceptionNumber;
-    //
-    // Buffer of IDT table. It must be type of IA32_IDT_GATE_DESCRIPTOR.
-    // Normally there's no need to change IDT table size.
-    //
-    VOID       *IdtTable;
-    //
-    // Size of buffer for IdtTable.
-    //
-    UINTN      IdtTableSize;
-    //
-    // Buffer of GDT table. It must be type of IA32_SEGMENT_DESCRIPTOR.
-    //
-    VOID       *GdtTable;
-    //
-    // Size of buffer for GdtTable.
-    //
-    UINTN      GdtTableSize;
-    //
-    // Pointer to start address of descriptor of exception task gate in the
-    // GDT table. It must be type of IA32_TSS_DESCRIPTOR.
-    //
-    VOID       *ExceptionTssDesc;
-    //
-    // Size of buffer for ExceptionTssDesc.
-    //
-    UINTN      ExceptionTssDescSize;
-    //
-    // Buffer of task-state segment for exceptions. It must be type of
-    // IA32_TASK_STATE_SEGMENT.
-    //
-    VOID       *ExceptionTss;
-    //
-    // Size of buffer for ExceptionTss.
-    //
-    UINTN      ExceptionTssSize;
-    //
-    // Flag to indicate if default handlers should be initialized or not.
-    //
-    BOOLEAN    InitDefaultHandlers;
-  } Ia32, X64;
-} CPU_EXCEPTION_INIT_DATA;
-
 /**
   Initializes all CPU exceptions entries and provides the default exception handlers.
 
@@ -104,20 +37,23 @@ InitializeCpuExceptionHandlers (
 
 /**
   Setup separate stacks for certain exception handlers.
+  If the input Buffer and BufferSize are both NULL, use global variable if possible.
 
-  InitData is optional and processor arch dependent.
-
-  @param[in]  InitData      Pointer to data optional for information about how
-                            to assign stacks for certain exception handlers.
+  @param[in]       Buffer        Point to buffer used to separate exception stack.
+  @param[in, out]  BufferSize    On input, it indicates the byte size of Buffer.
+                                 If the size is not enough, the return status will
+                                 be EFI_BUFFER_TOO_SMALL, and output BufferSize
+                                 will be the size it needs.
 
   @retval EFI_SUCCESS             The stacks are assigned successfully.
   @retval EFI_UNSUPPORTED         This function is not supported.
-
+  @retval EFI_BUFFER_TOO_SMALL    This BufferSize is too small.
 **/
 EFI_STATUS
 EFIAPI
 InitializeSeparateExceptionStacks (
-  IN CPU_EXCEPTION_INIT_DATA  *InitData OPTIONAL
+  IN     VOID   *Buffer,
+  IN OUT UINTN  *BufferSize
   );
 
 /**
