@@ -49,6 +49,7 @@
   TimerLib
   DebugLib
   PcdLib
+  VmgExitLib
 
 [Pcd]
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmBaseAddress            ## CONSUMES

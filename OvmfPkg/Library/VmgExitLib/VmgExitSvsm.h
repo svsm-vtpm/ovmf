@@ -72,4 +72,40 @@ typedef union {
   UINT64  Uint64;
 } SVSM_FUNCTION;
 
+/**
+  Return the address of SVSM Call Area (CAA).
+
+  Determines the address of the SVSM CAA.
+
+  @return             The address of the SVSM CAA
+
+**/
+SVSM_CAA *
+SvsmGetCaa (
+  VOID
+  );
+
+/**
+  Issue an SVSM request.
+
+  Invokes the SVSM to process a request on behalf of the guest.
+
+  @param[in]  Caa     Pointer to the call area
+  @param[in]  Rax     Contents to be set in RAX at VMGEXIT
+  @param[in]  Rcx     Contents to be set in RCX at VMGEXIT
+  @param[in]  Rdx     Contents to be set in RDX at VMGEXIT
+  @param[in]  R8      Contents to be set in R8 at VMGEXIT
+
+  @return             Contents of RAX upon return from VMGEXIT
+**/
+UINTN
+SvsmMsrProtocol (
+  IN SVSM_CAA  *Caa,
+  IN UINT64    Rax,
+  IN UINT64    Rcx,
+  IN UINT64    Rdx,
+  IN UINT64    R8,
+  IN UINT64    R9
+  );
+
 #endif

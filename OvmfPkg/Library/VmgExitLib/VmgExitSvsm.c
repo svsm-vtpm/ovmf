@@ -53,7 +53,6 @@ SvsmTerminate (
   @return                         The address of the SVSM CAA
 
 **/
-STATIC
 SVSM_CAA *
 SvsmGetCaa (
   VOID
@@ -79,14 +78,14 @@ SvsmGetCaa (
 
   @return             Contents of RAX upon return from VMGEXIT
 **/
-STATIC
 UINTN
 SvsmMsrProtocol (
   IN SVSM_CAA  *Caa,
   IN UINT64    Rax,
   IN UINT64    Rcx,
   IN UINT64    Rdx,
-  IN UINT64    R8
+  IN UINT64    R8,
+  IN UINT64    R9
   )
 {
   MSR_SEV_ES_GHCB_REGISTER  Msr;
@@ -119,7 +118,7 @@ SvsmMsrProtocol (
   // synchronized properly.
   //
   MemoryFence ();
-  Ret = AsmVmgExitSvsm (Rcx, Rdx, R8, 0, Rax);
+  Ret = AsmVmgExitSvsm (Rcx, Rdx, R8, R9, Rax);
   MemoryFence ();
 
   Msr.Uint64 = AsmReadMsr64 (MSR_SEV_ES_GHCB);
@@ -182,12 +181,12 @@ SvsmVmsaRmpAdjust (
 
     VmsaGpa = (UINT64)(UINTN)Vmsa;
     CaaGpa  = (UINT64)(UINTN)Vmsa + SIZE_4KB;
-    Ret = SvsmMsrProtocol (Caa, Function.Uint64, VmsaGpa, CaaGpa, ApicId);
+    Ret = SvsmMsrProtocol (Caa, Function.Uint64, VmsaGpa, CaaGpa, ApicId, 0);
   } else {
     Function.CallId = 3;
 
     VmsaGpa = (UINT64)(UINTN)Vmsa;
-    Ret = SvsmMsrProtocol (Caa, Function.Uint64, VmsaGpa, 0, 0);
+    Ret = SvsmMsrProtocol (Caa, Function.Uint64, VmsaGpa, 0, 0, 0);
   }
 
   return (Ret == 0) ? EFI_SUCCESS : EFI_INVALID_PARAMETER;
@@ -289,7 +288,7 @@ SvsmPvalidate (
 
     Entry++;
     if (Entry > EntryLimit) {
-      Ret = SvsmMsrProtocol (Caa, Function.Uint64, (UINT64)Request, 0, 0);
+      Ret = SvsmMsrProtocol (Caa, Function.Uint64, (UINT64)Request, 0, 0, 0);
 
       //
       //TODO: If Ret == FAIL_SIZEMISMATCH at 2M, retry at 4K
@@ -304,7 +303,7 @@ SvsmPvalidate (
   }
 
   if (Entry > 0) {
-    Ret = SvsmMsrProtocol (Caa, Function.Uint64, (UINT64)Request, 0, 0);
+    Ret = SvsmMsrProtocol (Caa, Function.Uint64, (UINT64)Request, 0, 0, 0);
 
     //
     //TODO: If Ret == FAIL_SIZEMISMATCH at 2M, retry at 4K
