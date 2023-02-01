@@ -262,12 +262,12 @@ SvsmPvalidate (
   SVSM_FUNCTION           Function;
   UINTN                   Entry;
   UINTN                   EntryLimit;
+  UINTN                   StartIndex;
   UINTN                   Index;
   UINTN                   EndIndex;
   UINTN                   Ret;
 
   Caa = SvsmGetCaa ();
-  SetMem (Caa->SvsmBuffer, sizeof (Caa->SvsmBuffer), 0);
 
   Function.Protocol = 0;
   Function.CallId   = 1;
@@ -276,40 +276,60 @@ SvsmPvalidate (
   EntryLimit = ((sizeof (Caa->SvsmBuffer) - sizeof (*Request)) /
                  sizeof (Request->Entry[0])) - 1;
 
-  Entry    = 0;
-  Index    = Info->Header.CurrentEntry;
-  EndIndex = Info->Header.EndEntry;
+  Entry      = 0;
+  Index      = Info->Header.CurrentEntry;
+  StartIndex = Index;
+  EndIndex   = Info->Header.EndEntry;
 
-  while (Index <= EndIndex) {
-    Request->Entries++;
-    Request->Entry[Entry].PageSize = Info->Entry[Index].PageSize;
-    Request->Entry[Entry].Action   = (Validate == TRUE) ? 1 : 0;
-    Request->Entry[Entry].IgnoreCf = 0;
-    Request->Entry[Entry].Address  = Info->Entry[Index].GuestFrameNumber;
-
-    Entry++;
-    if (Entry > EntryLimit) {
-      Ret = SvsmMsrProtocol (Caa, Function.Uint64, (UINT64)Request, 0, 0);
-
-      //
-      //TODO: If Ret == FAIL_SIZEMISMATCH at 2M, retry at 4K
-      //
-      ASSERT (Ret == 0);
-
-      SetMem (Caa->SvsmBuffer, sizeof (Caa->SvsmBuffer), 0);
-      Entry = 0;
+  while (StartIndex <= EndIndex) {
+    /* Fill request buffer */
+    SetMem (Caa->SvsmBuffer, sizeof (Caa->SvsmBuffer), 0);
+    for (Entry = 0;
+         Entry != EntryLimit && StartIndex + Entry <= EndIndex;
+         Entry++) {
+      Index = StartIndex + Entry;
+      Request->Entries++;
+      Request->Entry[Entry].PageSize = Info->Entry[Index].PageSize;
+      Request->Entry[Entry].Action   = (Validate == TRUE) ? 1 : 0;
+      Request->Entry[Entry].IgnoreCf = 0;
+      Request->Entry[Entry].Address  = Info->Entry[Index].GuestFrameNumber;
     }
 
-    Index++;
-  }
+    Ret = SvsmMsrProtocol(Caa, Function.Uint64, (UINT64)Request, 0, 0);
 
-  if (Entry > 0) {
-    Ret = SvsmMsrProtocol (Caa, Function.Uint64, (UINT64)Request, 0, 0);
+    if (Ret == 0) {
+      StartIndex += Entry;
+    } else if (Ret == 0x80001006) {
+      /* FAIL_SIZEMISMATCH - retry with 4k */
+      UINTN FailedIndex = Request->Next + StartIndex;
+      UINTN NestedIndex = 0;
 
-    //
-    //TODO: If Ret == FAIL_SIZEMISMATCH at 2M, retry at 4K
-    //
-    ASSERT (Ret == 0);
+      ASSERT (Info->Entry[FailedIndex].PageSize != 0);
+
+      while (NestedIndex < 512) {
+
+        SetMem (Caa->SvsmBuffer, sizeof (Caa->SvsmBuffer), 0);
+        for (Entry = 0;
+             Entry != EntryLimit && NestedIndex + Entry < 512;
+             Entry++) {
+          Request->Entries++;
+          Request->Entry[Entry].PageSize = 0; /* 4k */
+          Request->Entry[Entry].Action   = (Validate == TRUE) ? 1 : 0;
+          Request->Entry[Entry].IgnoreCf = 0;
+          Request->Entry[Entry].Address  = Info->Entry[FailedIndex].GuestFrameNumber + NestedIndex + Entry;
+        }
+
+        Ret = SvsmMsrProtocol(Caa, Function.Uint64, (UINT64)Request, 0, 0);
+        ASSERT (Ret == 0);
+        NestedIndex += Entry;
+        ASSERT (NestedIndex <= 512);
+      }
+      StartIndex = FailedIndex + 1;
+    } else {
+      ASSERT (Ret == 0);
+    }
+
+    SetMem (Caa->SvsmBuffer, sizeof (Caa->SvsmBuffer), 0);
   }
 }
 
