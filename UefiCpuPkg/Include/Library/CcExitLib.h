@@ -245,4 +245,24 @@ VmgExitVmsaRmpAdjust (
   IN BOOLEAN           SetVmsa
   );
 
+/**
+  Tries to perform a SVSM call to the vTPM.
+
+  The buffer should contain a marshalled TPM command and will return a
+  marshalled TPM response.  Sending down a NULL buffer will do nothing but
+  can be used to probe for the existence of the SVSM vTPM (will return
+  non zero if no vTPM is present)
+
+  @param Buffer               A pointer to the input command and output response
+
+  @retval TRUE                The Command is processed (or the vTPM is present)
+  @retval FALSE               The vTPM is not present
+
+**/
+BOOLEAN
+EFIAPI
+VmgExitVTPM (
+  IN OUT UINT8             *Buffer
+  );
+
 #endif

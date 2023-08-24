@@ -64,4 +64,37 @@ InternalTpm2DeviceLibDTpmCommonConstructor (
   VOID
   );
 
+/**
+  Check if an SVSM based TPM is present
+
+  @retval TRUE    SVSM TPM is present
+  @retval FALSE   no SVSM TPM is present
+**/
+BOOLEAN
+Tpm2IsSvsm (
+  VOID
+  );
+
+/**
+  Send a command to TPM for execution and return response data.
+
+  @param[in]      BufferIn      Buffer for command data.
+  @param[in]      SizeIn        Size of command data.
+  @param[in, out] BufferOut     Buffer for response data.
+  @param[in, out] SizeOut       Size of response data.
+
+  @retval EFI_SUCCESS           Operation completed successfully.
+  @retval EFI_BUFFER_TOO_SMALL  Response data buffer is too small.
+  @retval EFI_DEVICE_ERROR      Unexpected device behavior.
+  @retval EFI_UNSUPPORTED       Unsupported TPM version
+
+**/
+EFI_STATUS
+Tpm2SvsmTpmCommand (
+  IN     UINT8                 *BufferIn,
+  IN     UINT32                SizeIn,
+  IN OUT UINT8                 *BufferOut,
+  IN OUT UINT32                *SizeOut
+  );
+
 #endif // _TPM2_DEVICE_LIB_DTPM_H_

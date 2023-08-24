@@ -439,6 +439,11 @@ Tpm2GetPtpInterface (
   PTP_CRB_INTERFACE_IDENTIFIER   InterfaceId;
   PTP_FIFO_INTERFACE_CAPABILITY  InterfaceCapability;
 
+  if (Tpm2IsSvsm ()) {
+    DEBUG((DEBUG_INFO, "Found SVSM TPM\n"));
+    return Tpm2PtpInterfaceSvsm;
+  }
+
   if (!Tpm2IsPtpPresence (Register)) {
     return Tpm2PtpInterfaceMax;
   }
@@ -612,6 +617,13 @@ DTpm2SubmitCommand (
                OutputParameterBlock,
                OutputParameterBlockSize
                );
+    case Tpm2PtpInterfaceSvsm:
+      return Tpm2SvsmTpmCommand (
+	       InputParameterBlock,
+               InputParameterBlockSize,
+               OutputParameterBlock,
+               OutputParameterBlockSize
+               );
     default:
       return EFI_NOT_FOUND;
   }
@@ -639,6 +651,8 @@ DTpm2RequestUseTpm (
     case Tpm2PtpInterfaceFifo:
     case Tpm2PtpInterfaceTis:
       return TisPcRequestUseTpm ((TIS_PC_REGISTERS_PTR)(UINTN)PcdGet64 (PcdTpmBaseAddress));
+    case Tpm2PtpInterfaceSvsm:
+      return EFI_SUCCESS;
     default:
       return EFI_NOT_FOUND;
   }
