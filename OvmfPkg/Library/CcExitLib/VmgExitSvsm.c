@@ -525,8 +525,8 @@ VmgExitVTPM (
     return FALSE;
 
   Caa = SvsmGetCaa ();
-  Function.Protocol = 0;
-  Function.CallId = 8;
+  Function.Protocol = 2;
+  Function.CallId = 1;
 
   Ret = SvsmMsrProtocol (Caa, Function.Uint64, (UINT64)Buffer, 0, 0);
   return (Ret == 0) ? TRUE : FALSE;
